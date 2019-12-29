@@ -1,21 +1,22 @@
 #include "Shader.h"
 
-Shader::Shader(const char * vertexPath, const GLchar * fragmentPath)
+Shader::Shader(const GLchar * vertexPath, const GLchar * fragmentPath)
 {
 	std::string vertexCode;
 	std::string fragmentCode;
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
-
+	int i = 0;
 	vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	// read source from files
 	try
 	{
 		vShaderFile.open(vertexPath);
+		++i;
 		fShaderFile.open(fragmentPath);
+		
 		std::stringstream vShaderStream, fShaderStream;
-
 		vShaderStream << vShaderFile.rdbuf();
 		fShaderStream << fShaderFile.rdbuf();
 
@@ -28,6 +29,7 @@ Shader::Shader(const char * vertexPath, const GLchar * fragmentPath)
 	catch (std::ifstream::failure e)
 	{
 		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+		std::cout << strerror(errno) << i << std::endl;
 	}
 	const char* vShaderCode = vertexCode.c_str();
 	const char* fShaderCode = fragmentCode.c_str();

@@ -158,6 +158,7 @@ int main()
 	}
 
 	shaderProgram.~Shader();
+	lampShader.~Shader();
 	Box::Terminate();
 
 	// terminate
