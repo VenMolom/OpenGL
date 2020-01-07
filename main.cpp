@@ -22,6 +22,7 @@ void processInput(GLFWwindow* window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+const unsigned int NR_POINT_LIGHTS = 4;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -37,6 +38,7 @@ int main()
 {
 	// initialization
 	glfwInit();
+{
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -69,46 +71,86 @@ int main()
 
 	// boxes
 	Box object;
+	glm::vec3 cubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
 	Box light(lightPos, glm::vec3(0.2f));
-	/*Box boxes[] = {
-	  Box(glm::vec3(0.0f,  0.0f,  0.0f)),
-	  Box(glm::vec3(2.0f,  5.0f, -15.0f)),
-	  Box(glm::vec3(-1.5f, -2.2f, -2.5f)),
-	  Box(glm::vec3(-3.8f, -2.0f, -12.3f)),
-	  Box(glm::vec3(2.4f, -0.4f, -3.5f)),
-	  Box(glm::vec3(-1.7f,  3.0f, -7.5f)),
-	  Box(glm::vec3(1.3f, -2.0f, -2.5f)),
-	  Box(glm::vec3(1.5f,  2.0f, -2.5f)),
-	  Box(glm::vec3(1.5f,  0.2f, -1.5f)),
-	  Box(glm::vec3(-1.3f,  1.0f, -1.5f))
-	};*/
-	
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
+	};
+
 
 	//texture
-	//Texture container("textures/container.jpg", GL_RGB);
-	//Texture face("textures/awesomeface.png", GL_RGBA);
+	Texture diffuseMap("textures/container2.png", GL_RGBA);
+	Texture specularMap("textures/container2_specular.png", GL_RGBA);
+
 
 	// shader program
 	Shader shaderProgram("shaders/shader.vert", "shaders/shader.frag");
 	shaderProgram.use();
-	//shaderProgram.setInt("texture1", 0);
-	//shaderProgram.setInt("texture2", 1);
-	shaderProgram.setFloat("material.ambient", 0.0f, 0.1f, 0.06f);
-	shaderProgram.setFloat("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
-	shaderProgram.setFloat("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
-	shaderProgram.setFloat("material.shininess", 32.0f);
-	shaderProgram.setFloat("light.position", lightPos);
-	shaderProgram.setFloat("light.ambient", 1.0f, 1.0f, 1.0f);
-	shaderProgram.setFloat("light.diffuse", 1.0f, 1.0f, 1.0f);
-	shaderProgram.setFloat("light.specular", 1.0f, 1.0f, 1.0f);
+
+	// material uniforms
+	shaderProgram.setInt("material.diffuse", 0);
+	shaderProgram.setInt("material.specular", 1);
+	shaderProgram.setFloat("material.shininess", 64.0f);
+
+	// dirLight uniforms
+	shaderProgram.setFloat("dirLight.direction", -0.2f, -1.0f, -0.3f);
+	shaderProgram.setFloat("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+	shaderProgram.setFloat("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+	shaderProgram.setFloat("dirLight.specular", 0.5f, 0.5f, 0.5f);
+
+	// pointLights uniforms
+	for (int i = 0; i < NR_POINT_LIGHTS; ++i)
+	{
+		std::string position = std::to_string(i);
+		shaderProgram.setFloat("pointLights[" + position + "].position", pointLightPositions[i]);
+
+		shaderProgram.setFloat("pointLights[" + position + "].ambient", 0.00f, 0.05f, 0.00f);
+		shaderProgram.setFloat("pointLights[" + position + "].diffuse", 0.0f, 0.8f, 0.0f);
+		shaderProgram.setFloat("pointLights[" + position + "].specular", 0.0f, 1.0f, 0.0f);
+
+		shaderProgram.setFloat("pointLights[" + position + "].constant", 1.0f);
+		shaderProgram.setFloat("pointLights[" + position + "].linear", 0.09f);
+		shaderProgram.setFloat("pointLights[" + position + "].quadratic", 0.032f);
+	}
+
+	// spotLight uniforms
+	shaderProgram.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+	shaderProgram.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+	shaderProgram.setFloat("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+	shaderProgram.setFloat("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+	shaderProgram.setFloat("spotLight.specular", 1.0f, 1.0f, 1.0f);
+
+	shaderProgram.setFloat("spotLight.constant", 1.0f);
+	shaderProgram.setFloat("spotLight.linear", 0.09f);
+	shaderProgram.setFloat("spotLight.quadratic", 0.032f);
+	
 
 	Shader lampShader("shaders/shader.vert", "shaders/shaderLamp.frag");
 
 	object.SetShader(shaderProgram);
 	light.SetShader(lampShader);
-
+	
+	object.AddTexture(diffuseMap, 0);
+	object.AddTexture(specularMap, 1);
 	//object.AddTexture(container, 0);
 	//object.AddTexture(face, 1);
+
 
 	glEnable(GL_DEPTH_TEST);
 	// game loop
@@ -123,7 +165,7 @@ int main()
 		processInput(window);
 		
 		// clear
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//light.SetPosition((glm::vec3)(glm::rotate(glm::mat4(1.0f), glm::radians(100.0f * deltaTime), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light.GetPosition(), 1.0f)));
@@ -148,19 +190,27 @@ int main()
 
 		//box.Rotate(50.0f * deltaTime, glm::vec3(1.0f, 1.0f, 1.0f));
 		//box.SetPosition(glm::vec3(0.0f, sin(glfwGetTime()), 0.0f));
-		
-		object.Draw();
-		light.Draw();
+
+		for (int i = 0; i < 10; ++i)
+		{
+			object.SetPosition(cubePositions[i]);
+			object.SetRotation(20.0f * i, glm::vec3(1.0f, 0.3f, 0.5f));
+			object.Draw();
+		}
+
+		for (int i = 0; i < NR_POINT_LIGHTS; ++i)
+		{
+			light.SetPosition(pointLightPositions[i]);
+			light.Draw();
+		}
 
 		// buffer swap and pool events
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	shaderProgram.~Shader();
-	lampShader.~Shader();
 	Box::Terminate();
-
+}
 	// terminate
 	glfwTerminate();
 	return 0;

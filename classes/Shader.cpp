@@ -29,7 +29,9 @@ Shader::Shader(const GLchar * vertexPath, const GLchar * fragmentPath)
 	catch (std::ifstream::failure e)
 	{
 		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+#ifdef __linux__
 		std::cout << strerror(errno) << i << std::endl;
+#endif
 	}
 	const char* vShaderCode = vertexCode.c_str();
 	const char* fShaderCode = fragmentCode.c_str();
@@ -92,6 +94,10 @@ void Shader::setFromCamera(const Camera & camera, float screen_width, float scre
 	glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
 
 	setFloat("viewPos", camera.GetPosition());
+
+	setFloat("spotLight.position", camera.GetPosition());
+	setFloat("spotLight.direction", camera.GetFront());
+
 	setMat4("view", glm::value_ptr(view));
 	setMat4("projection", glm::value_ptr(projection));
 }

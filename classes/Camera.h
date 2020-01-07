@@ -43,6 +43,7 @@ public:
 	glm::mat4 GetViewMatrix() const;
 	float GetZoom() const;
 	glm::vec3 GetPosition() const;
+	glm::vec3 GetFront() const;
 
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime);
 	void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
